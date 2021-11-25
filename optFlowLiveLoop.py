@@ -10,8 +10,10 @@ Can be easily modified to accept live frames from a webcame or other accessory c
 
 magnitude = 5       #amplify arrow size in draw_flow display; default = 1
 brightness = 32     #amplify brightness in draw_hsv display; default = 4
-stepSize = 8        #density of arrows to draw (1 = max, 16 = sparse)
+stepSize = 16        #density of arrows to draw (1 = max, 16 = sparse)
 framesToSkip = 0    #number of frames to skip before comparing
+baseDirectory = "/Users/zacswider/Desktop/ttsmallcrop"           #specifies base directory
+fileNameEnding = ".tif"
 
 def draw_flow(img, flow, step=stepSize):    #openCV function for drawing flow fields, with my modifications
     h, w = img.shape[:2]
@@ -40,9 +42,9 @@ def draw_hsv(flow):                         #openCV function for drawing flow fi
 def findWorkspace(directory, prompt):                                                       #accepts a starting directory and a prompt for the GUI
     #targetWorkspace = askdirectory(initialdir=directory, message=prompt)                    #opens prompt asking for folder, keep commented to default to baseDirectory
     targetWorkspace = directory                                                            #comment this out later if you want a GUI
-    filelist = [fname for fname in os.listdir(targetWorkspace) if fname.endswith('.tif')]   #Makes a list of file names that end with .tif
+    filelist = [fname for fname in os.listdir(targetWorkspace) if fname.endswith(fileNameEnding)]   #Makes a list of file names that end with .tif
     return(targetWorkspace, filelist)                                                       #returns the folder path and list of file names
-baseDirectory = "/Users/bementmbp/Desktop/testImages/eb1_crop"                              #specifies base directory
+
 directory, fileNames = findWorkspace(baseDirectory, "PLEASE SELECT YOUR SOURCE WORKSPACE")  #string object describing the file path, list object containing all file names ending with .tif
 fileNames.sort()                                                                            #sorts the file names so they are indexed properly
 
@@ -52,7 +54,7 @@ prevgray = cv2.cvtColor(prev, cv2.COLOR_BGR2GRAY)                       #makes s
 while True:                                                             #loops until canceled
     img = cv2.imread(directory + "/" + fileNames[i+1+framesToSkip])     #opens the next frame, depending on what skips is set to    
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)                        #makes sure that it is grayscale
-    flow = cv2.calcOpticalFlowFarneback(prevgray, gray, None, pyr_scale = 0.5, levels = 3, winsize = 15, iterations = 1, 
+    flow = cv2.calcOpticalFlowFarneback(prevgray, gray, None, pyr_scale = 0.5, levels = 3, winsize = 10, iterations = 1, 
                             poly_n = 3, poly_sigma = .5, flags = 1)     #calculates flow
     prevgray = gray                                                     #sets most recently opened image as the previous image for next loop
     if i == len(fileNames)-2-framesToSkip:                              #makes sure that we never go out of index, accounting for skipped frames
@@ -61,7 +63,7 @@ while True:                                                             #loops u
         i = i+1                                                         #advances i by one value (frame)
     cv2.imshow('flow', draw_flow(gray, flow))                           #calls draw_flow
     cv2.imshow('flow HSV', draw_hsv(flow))                              #alls draw_hsv
-    key = cv2.waitKey(62)                                             #wait time in ms between frames
+    key = cv2.waitKey(10)                                             #wait time in ms between frames
     if key == ord('q'):
         break                                                           #breaks the loop if you hit q
 

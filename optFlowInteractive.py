@@ -1,7 +1,5 @@
 import cv2 as cv
 import numpy as np
-from PIL import Image
-from pathlib import Path
 import skimage.io as skio 
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider

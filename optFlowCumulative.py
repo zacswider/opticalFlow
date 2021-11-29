@@ -35,7 +35,18 @@ def calcVectors(flowArray):
 
 avgAngs = np.zeros((1, imageStack[0][1].size, imageStack[0][2].size))
 avgMags = np.zeros((1, imageStack[0][1].size, imageStack[0][2].size))
+firstAvg = np.zeros((1, imageStack[0][1].size, imageStack[0][2].size))
+secondAvg = np.zeros((1, imageStack[0][1].size, imageStack[0][2].size))
 
+flow = calcFlow(imageStack[0], imageStack[1], pyr =0.5, lev = 3, win = 20, it = 3, polN = 7, polS = 1.5, flag = 1)
+print(flow.shape)
+print(flow[::][::][::].shape)
+
+
+
+
+
+"""
 for i in range(imageStack.shape[0]-1):
     flow = calcFlow(imageStack[i], imageStack[i+1], pyr =0.5, lev = 3, win = 20, it = 3, polN = 7, polS = 1.5, flag = 1)
     mags, angs = cv.cartToPolar(flow[:,:,0], flow[:,:,1]*-1, angleInDegrees = False)  #multiple by -1 to get the angles along the same axis as image
@@ -43,6 +54,9 @@ for i in range(imageStack.shape[0]-1):
     mags = np.expand_dims(mags, axis=0)
     avgAngs = np.concatenate((avgAngs, angs))
     avgMags = np.concatenate((avgMags, mags))
+    
+    #firstAvg = np.concatenate((firstAvg, flow[0]))
+    #secondAvg = np.concatenate((secondAvg, flow[0]))
 
 flatAngles = avgAngs.flatten()                             # flattens the array into one dimension
 flatMagnitudes = avgMags.flatten()                         # flattens the array into one dimension
@@ -51,7 +65,7 @@ widths = np.diff(bins)                                  # ndarray; width of each
 radius = n                                              # sets the histogram radius equal to counts; could modify this to set bar *area* proportional to counts instead of height
 
 
-'''***** Plots and Sliders *****'''
+'''***** Plots *****'''
 
 fig = plt.figure()                                  # makes figure object
 ax1 = plt.subplot(1, 2, 1)                          # axis object; left subplot
@@ -68,3 +82,4 @@ ax2.set_yticks([])                          # gets rid of y axis tick marks
 plt.show()
 
 
+"""

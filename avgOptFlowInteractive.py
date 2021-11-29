@@ -14,11 +14,7 @@ imagePath = "/Users/bementmbp/Desktop/bzoptflow.tif"    # full path to 1-channel
 imageStack=skio.imread(imagePath)   # reads image as ndArray
 scale = 1                           # scale variable for displayed vector size; bigger value = smaller vector
 step = 4                            # step size for vectors. Larger value = less vectors displayed
-framesToSkip = 0                    # skip frames when comparing. Default is to compare consecutive frames (i.e., skip zero)
 numBins = 64                        # number of bins for the polar histogram
-start = 0                           # starting frame to compare, default is to start comparing with the first frame (index 0)
-firstFrame = imageStack[start]                  # sets first image frame
-secondFrame = imageStack[start+framesToSkip+1]  # sets second image frame
 emptyList = []                                  # empty list to fill with bin values
 for i in range(numBins):                        # builds empty list...
     emptyList.append(i*(6.28/numBins))          # full of equally radian values around a circle

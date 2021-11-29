@@ -9,7 +9,7 @@ from tkinter.filedialog import askopenfilename
 '''***** Default Parameters *****'''
 #Tk().withdraw()                     # keeps the root tkinter window from appearing
 #imagePath = askopenfilename()       # show an "Open" dialog box and return the path to the selected file
-imagePath = "/Users/bementmbp/Desktop/bzoptflow16-2.tif"    # full path to 1-channel image
+imagePath = "/Users/bementmbp/Desktop/BementLab/14_dataAnalysis/211143_furrowOptFlow/190205_Live_SFC_Emb_Utr647_E01-T01_MaxRotate_253-335.tif"    # full path to 1-channel image
 imageStack=skio.imread(imagePath)   # reads image as ndArray
 scale = 1                           # scale variable for displayed vector size; bigger value = smaller vector
 step = 4                            # step size for vectors. Larger value = less vectors displayed

@@ -18,6 +18,10 @@ numBins = 64                        # number of bins for the polar histogram
 start = 0                           # starting frame to compare, default is to start comparing with the first frame (index 0)
 firstFrame = imageStack[start]                  # sets first image frame
 secondFrame = imageStack[start+framesToSkip+1]  # sets second image frame
+emptyList = []                                  # empty list to fill with bin values
+for i in range(numBins):                        # builds empty list...
+    emptyList.append(i*(6.28/numBins))          # full of equally radian values around a circle
+useBins = np.array(emptyList)                   # and converts to np array to use in histogram calculation
 
 '''***** Flow and Hist Functions *****'''
 def calcFlow(frame1, frame2, pyr, lev, win, it, polN, polS, flag):      # equation to calculate dense optical flow: https://docs.opencv.org/2.4/modules/video/doc/motion_analysis_and_object_tracking.html#calcopticalflowfarneback
@@ -30,7 +34,7 @@ def calcVectors(flowArray):
     mags, angs = cv.cartToPolar(flowArray[:,:,0], flowArray[:,:,1]*(-1), angleInDegrees = False)  # converts flow to magnitude and angels; multiple vectors by -1 to get the angles along the same axis as image
     flatAngles = angs.flatten()                             # flattens the array into one dimension
     flatMagnitudes = mags.flatten()                         # flattens the array into one dimension
-    n, bins = np.histogram(flatAngles, bins=numBins, weights = flatMagnitudes)      # n is the counts and bins is ndarray of the equally spaced bins between (-pi, pi)
+    n, bins = np.histogram(flatAngles, bins=useBins, weights = flatMagnitudes)      # n is the counts and bins is ndarray of the equally spaced bins between (-pi, pi)
     widths = np.diff(bins)                                  # ndarray; width of each bin
     radius = n                                              # sets the histogram radius equal to counts; could modify this to set bar *area* proportional to counts instead of height
     return(bins, widths, radius)

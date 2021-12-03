@@ -15,7 +15,7 @@ from tkinter.filedialog import askopenfilename
 '''***** Default Parameters *****'''
 #Tk().withdraw()                     # keeps the root tkinter window from appearing
 #imagePath = askopenfilename()       # show an "Open" dialog box and return the path to the selected file
-imagePath = "/Users/bementmbp/Desktop/BementLab/14_dataAnalysis/211143_furrowOptFlow/210326_Live_SFC_Emb_Utr647_E01-T01/210326_Live_SFC_Emb_Utr647_E01-T01_Max_159-253_Rotate7dgCropRegDiff6_1-32Crop_Furrow_Gauss8AutoThresh.tif"    # full path to 1-channel image
+imagePath = "/Users/bementmbp/Desktop/210212_Live_SFC_Aegg_GFP-wGBD_mCh-Utr_Cntrl_E05-T01_Max.tif"    # full path to 1-channel image
 savePath = Path(imagePath)
 fileName = savePath.stem
 saveDirectory = savePath.parent
@@ -57,7 +57,7 @@ def draw_hsv(flow):                         #openCV function for drawing flow fi
     bgr = cv.cvtColor(hsv, cv.COLOR_HSV2BGR)
     return bgr
 
-def colour_wheel(samples=1024, clip_circle=True, method='Colour'):
+def colour_wheel(samples=1024, clip_circle=True, method='Colour'): #https://stackoverflow.com/a/62544063/4812591
     xx, yy = np.meshgrid(
         np.linspace(-1, 1, samples), np.linspace(-1, 1, samples))
     S = np.sqrt(xx ** 2 + yy ** 2)    

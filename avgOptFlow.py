@@ -1,4 +1,5 @@
 import time
+import scipy
 import colour
 import cv2 as cv
 import numpy as np
@@ -16,8 +17,9 @@ from tkinter.filedialog import askopenfilename
 #imagePath = askopenfilename()       # show an "Open" dialog box and return the path to the selected file
 imagePath = "/Users/bementmbp/Desktop/BementLab/14_dataAnalysis/211143_furrowOptFlow/210326_Live_SFC_Emb_Utr647_E01-T01/210326_Live_SFC_Emb_Utr647_E01-T01_Max_159-253_Rotate7dgCropRegDiff6_1-32Crop_Furrow_Gauss8AutoThresh.tif"    # full path to 1-channel image
 savePath = Path(imagePath)
+fileName = savePath.stem
 saveDirectory = savePath.parent
-imageStack=skio.imread(imagePath)   # reads image as ndArray
+imageStack = skio.imread(imagePath)   # reads image as ndArray
 scale = 1                           # scale variable for displayed vector size; bigger value = smaller vector
 step = 4                            # step size for vectors. Larger value = less vectors displayed
 numBins = 64                        # number of bins for the polar histogram
@@ -31,7 +33,7 @@ goodPolyN = 1
 goodPolyS = 0.3
 params = {"window":[goodWindowSize], "PolyN":[goodPolyN], "PolyS":[goodPolyS]}
 paramDf = pd.DataFrame.from_dict(params)
-txtSave = saveDirectory / "test.txt"
+txtSave = saveDirectory / (fileName + "_params.txt")
 tfile = open(txtSave, 'a')
 tfile.write(paramDf.to_string())
 tfile.close()
@@ -110,9 +112,11 @@ avgFlow = np.concatenate((firstAvg, secondAvg), axis=2)                         
 fig = plt.figure()                                  # makes figure object
 ax1 = plt.subplot(1, 2, 1)                          # axis object; left subplot
 ax2 = plt.subplot(1, 2, 2, projection='polar')      # axis object; right subplot; uses polar coordinates
-imgMerge = ax1.imshow(draw_hsv(avgFlow)) # matplotlib.image.AxesImage object; image of the first frame compared
+imgMerge = ax1.imshow(draw_hsv(avgFlow), aspect="equal") # matplotlib.image.AxesImage object; image of the first frame compared
 newax = fig.add_axes([0.1, 0.8, 0.2, 0.2], anchor='NW')#, zorder=-1)
-newax.imshow(colour_wheel(samples=64))
+wheel = colour_wheel(samples=64)
+rotatedWheel = scipy.ndimage.rotate(wheel, 180)
+newax.imshow(rotatedWheel) #ROTATE 180
 newax.axis('off')
 ax1.set_xticks([])      # gets rid of x axis tick marks
 ax1.set_yticks([])      # gets rid of y axis tick marks
@@ -123,4 +127,6 @@ ax2.set_theta_zero_location("E")            # set the direction of the zero angl
 ax2.set_yticks([])                          # gets rid of y axis tick marks
 print("Done.")
 
+imgSave = saveDirectory / (fileName + ".png")
+plt.savefig(imgSave)
 plt.show()

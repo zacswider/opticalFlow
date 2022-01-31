@@ -2,13 +2,16 @@ import cv2 as cv
 import numpy as np
 import skimage.io as skio
 import matplotlib.pyplot as plt
+import os
+
 
 '''***** Default Parameters *****'''
-imagePath = "/Users/bementmbp/Desktop/020718_Bg-EB1-H2B_05-prj-mrg-1.tif"    # full path to 1-channel image
+imagePath = "/Volumes/speedyG/Data/2022/Exp305_01-27-2022_SF/Analysis/flow/MAX_305-002_mch-UtrCH_control_A-002_raw.tif"    # full path to 1-channel image
+imageName = os.path.splitext(imagePath)[0] #get the name of the file from the path (minus the suffix)
 imageStack=skio.imread(imagePath)   # reads image as ndArray
-goodWindowSize = 25
-goodPolyN = 5
-goodPolyS = 1.1
+goodWindowSize = 20
+goodPolyN = 7
+goodPolyS = 1.5
 
 '''***** Flow and Hist Functions *****'''
 def calcFlow(frame1, frame2, pyr, lev, win, it, polN, polS, flag):      # equation to calculate dense optical flow: https://docs.opencv.org/2.4/modules/video/doc/motion_analysis_and_object_tracking.html#calcopticalflowfarneback
@@ -43,6 +46,12 @@ allMags = np.delete(allMags, obj=0, axis=0)                                     
 firstConcat = np.delete(firstConcat, obj=0, axis=0)                                     # deletes the initial array full of zeros
 secondConcat = np.delete(secondConcat, obj=0, axis=0)                                   # deletes the initial array full of zeros
 avMag = np.mean(allMags, axis=0)                                                        # plot of average magnitudes
-plt.imshow(avMag)
+
+plt.imshow(avMag, origin="lower")
+plt.colorbar() #add color bar for LUT legend
 plt.tight_layout()
-plt.show()
+
+plotName = imageName + "_plot.png" #name for the fig
+savePath = os.path.join(os.path.basename(imagePath), plotName) #path to output location
+
+plt.savefig(savePath) #saves fig

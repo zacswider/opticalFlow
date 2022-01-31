@@ -7,7 +7,7 @@ import os
 
 '''***** Default Parameters *****'''
 imagePath = "/Volumes/speedyG/Data/2022/Exp305_01-27-2022_SF/Analysis/flow/MAX_305-002_mch-UtrCH_control_A-002_raw.tif"    # full path to 1-channel image
-imageName = os.path.splitext(imagePath)[0] #get the name of the file from the path (minus the suffix)
+imageName = os.path.split(imagePath)[1] #get the name of the file from the path
 imageStack=skio.imread(imagePath)   # reads image as ndArray
 goodWindowSize = 20
 goodPolyN = 7
@@ -51,7 +51,7 @@ plt.imshow(avMag, origin="lower")
 plt.colorbar() #add color bar for LUT legend
 plt.tight_layout()
 
-plotName = imageName + "_plot.png" #name for the fig
+plotName = imageName.rsplit(".",1)[0] + "_plot.png" #New name for the plot (removes .tif suffix)
 savePath = os.path.join(os.path.basename(imagePath), plotName) #path to output location
 
 plt.savefig(savePath) #saves fig

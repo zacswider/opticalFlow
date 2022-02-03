@@ -3,15 +3,26 @@ import numpy as np
 import skimage.io as skio
 import matplotlib.pyplot as plt
 import os
+import datetime
 
 
 '''***** Default Parameters *****'''
-imagePath = "/Volumes/speedyG/Data/2022/Exp305_01-27-2022_SF/Analysis/flow/MAX_305-002_mch-UtrCH_control_A-002_raw.tif"    # full path to 1-channel image
+imagePath = "PATHTOFILE"    # full path to 1-channel image
 imageName = os.path.split(imagePath)[1] #get the name of the file from the path
 imageStack=skio.imread(imagePath)   # reads image as ndArray
-goodWindowSize = 20
-goodPolyN = 7
-goodPolyS = 1.5
+goodWindowSize = 20                 #USER DEFINED
+goodPolyN = 7                       #USER DEFINED
+goodPolyS = 1.5                     #USER DEFINED
+
+logParams = {"Window Size": goodWindowSize, "PolyN": goodPolyN, "PolyS": goodPolyS} #dict of parameters for log file
+logPath = os.path.join(os.path.basename(imagePath), "log.txt")  #path for log file
+now = datetime.datetime.now()                                   # get current date and time
+logFile = open(logPath, "w")                                    # initiate text file
+logFile.write("\n" + now.strftime("%Y-%m-%d %H:%M") + "\n")     # write current date and time
+for key, value in logParams.items():                            # for each key:value pair in the parameter dictionary...
+    logFile.write('%s: %s\n' % (key, value))                    # write pair to new line
+logFile.close()                                                 # close the file
+
 
 '''***** Flow and Hist Functions *****'''
 def calcFlow(frame1, frame2, pyr, lev, win, it, polN, polS, flag):      # equation to calculate dense optical flow: https://docs.opencv.org/2.4/modules/video/doc/motion_analysis_and_object_tracking.html#calcopticalflowfarneback
@@ -55,3 +66,5 @@ plotName = imageName.rsplit(".",1)[0] + "_plot.png" #New name for the plot (remo
 savePath = os.path.join(os.path.basename(imagePath), plotName) #path to output location
 
 plt.savefig(savePath) #saves fig
+plt.close() #close fig in case you want to run again 
+

@@ -1,3 +1,4 @@
+import sys
 import cv2 as cv
 import numpy as np
 from tkinter import Tk
@@ -8,9 +9,9 @@ from matplotlib.widgets import Slider
 from tkinter.filedialog import askopenfilename
 
 '''***** Default Parameters *****'''
-#Tk().withdraw()                     # keeps the root tkinter window from appearing
-#imagePath = askopenfilename()       # show an "Open" dialog box and return the path to the selected file
-imagePath = "/Users/bementmbp/Desktop/BementLab/14_dataAnalysis/211143_furrowOptFlow/190205_Live_SFC_Emb_Utr647_E01-T01_Max-Rotate_253-335_RegDiff10CropRoll2_Gauss8.tif"    # full path to 1-channel image
+Tk().withdraw()                     # keeps the root tkinter window from appearing
+imagePath = askopenfilename()       # show an "Open" dialog box and return the path to the selected file
+#imagePath = " "    # full path to 1-channel image
 imageStack=skio.imread(imagePath)   # reads image as ndArray
 scale = 1                           # scale variable for displayed vector size; bigger value = smaller vector
 step = 4                            # step size for vectors. Larger value = less vectors displayed
@@ -22,6 +23,11 @@ useBins = np.array(emptyList)                   # and converts to np array to us
 goodWindowSize = 15
 goodPolyN = 3
 goodPolyS = 0.3
+
+'''***** Quality Control *****'''
+if imageStack.ndim > 3:
+    print('The image has greater than three dimensions. Please load a single channel time lapse.')
+    sys.exit()
 
 '''***** Flow and Hist Functions *****'''
 def calcFlow(frame1, frame2, pyr, lev, win, it, polN, polS, flag):      # equation to calculate dense optical flow: https://docs.opencv.org/2.4/modules/video/doc/motion_analysis_and_object_tracking.html#calcopticalflowfarneback

@@ -3,7 +3,7 @@ This script is for batch processing and plotting optical flow magnitude.
 The user specifies a folder location with MAX projection time-series .tif files.
 The script calculates the average magnitude of optical flow for each movie and generates color-coded plots.
 
-USER MUST SET PARAMETERS ON LINES 34-36
+USER MUST SET PARAMETERS FOR OPTICAL FLOW
 
 '''
 
@@ -14,6 +14,10 @@ import matplotlib.pyplot as plt
 import os
 from tkinter.filedialog import askdirectory
 import datetime
+
+goodWindowSize = 20                 #USER DEFINED
+goodPolyN = 7                       #USER DEFINED
+goodPolyS = 1.5                     #USER DEFINED
 
 def set_up(): #select your initial directory
     targetWorkspace = askdirectory(title="Select your workspace")   #ask user for workspace with .tif files
@@ -33,9 +37,6 @@ def calculate_flow(targetWorkspace, fileNames, outputDir): #calculate optical fl
         print('Starting analysis of ', imageName)
 
         imageStack=skio.imread(imagePath)   # reads image as ndArray
-        goodWindowSize = 20                 #USER DEFINED
-        goodPolyN = 7                       #USER DEFINED
-        goodPolyS = 1.5                     #USER DEFINED
         
         logParams = {"Window Size": goodWindowSize, "PolyN": goodPolyN, "PolyS": goodPolyS} #dict of parameters for log file
 

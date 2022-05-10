@@ -1,3 +1,4 @@
+import sys
 import cv2 as cv
 import numpy as np
 from tkinter import Tk
@@ -5,11 +6,11 @@ import skimage.io as skio
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider
 from tkinter.filedialog import askopenfilename
-#test
+
 '''***** Default Parameters *****'''
-#Tk().withdraw()                     # keeps the root tkinter window from appearing
-#imagePath = askopenfilename()       # show an "Open" dialog box and return the path to the selected file
-imagePath = "/Users/bementmbp/Desktop/bzoptflow16-2.tif"    # full path to 1-channel image
+Tk().withdraw()                     # keeps the root tkinter window from appearing
+imagePath = askopenfilename()       # show an "Open" dialog box and return the path to the selected file
+#imagePath = " "    # if you want to hard code your own path
 imageStack=skio.imread(imagePath)   # reads image as ndArray
 scale = 1                           # scale variable for displayed vector size; bigger value = smaller vector
 step = 4                            # step size for vectors. Larger value = less vectors displayed
@@ -18,6 +19,11 @@ numBins = 64                        # number of bins for the polar histogram
 start = 0                           # starting frame to compare, default is to start comparing with the first frame (index 0)
 firstFrame = imageStack[start]                  # sets first image frame
 secondFrame = imageStack[start+framesToSkip+1]  # sets second image frame
+
+'''***** Quality Control *****'''
+if imageStack.ndim > 3:
+    print('The image has greater than three dimensions. Please load a single channel time lapse.')
+    sys.exit()
 
 '''***** Flow and Hist Functions *****'''
 def calcFlow(frame1, frame2, pyr, lev, win, it, polN, polS, flag):      # equation to calculate dense optical flow: https://docs.opencv.org/2.4/modules/video/doc/motion_analysis_and_object_tracking.html#calcopticalflowfarneback

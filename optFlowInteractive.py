@@ -19,10 +19,7 @@ numBins = 64                        # number of bins for the polar histogram
 start = 0                           # starting frame to compare, default is to start comparing with the first frame (index 0)
 firstFrame = imageStack[start]                  # sets first image frame
 secondFrame = imageStack[start+framesToSkip+1]  # sets second image frame
-emptyList = []                                  # empty list to fill with bin values
-for i in range(numBins):                        # builds empty list...
-    emptyList.append(i*(6.28/numBins))          # full of equally radian values around a circle
-useBins = np.array(emptyList)                   # and converts to np array to use in histogram calculation
+useBins = np.array([i*(6.28/numBins) for i in range(numBins + 1)])   #full of equally radian values around a circle
 
 '''***** Quality Control *****'''
 if imageStack.ndim > 3:

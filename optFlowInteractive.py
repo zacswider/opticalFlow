@@ -8,9 +8,9 @@ from matplotlib.widgets import Slider
 from tkinter.filedialog import askopenfilename
 
 '''***** Default Parameters *****'''
-Tk().withdraw()                 
-imagePath = askopenfilename()       # full path to 1-channel image
-#imagePath = " "    # If you want to hard code an image path
+#Tk().withdraw()                 
+#imagePath = askopenfilename(initialdir = './test_data')       # full path to 1-channel image
+imagePath = "/Users/bementmbp/Desktop/Scripts/opticalFlow/test_data/200102_BZ_crop.tif"    # If you want to hard code an image path
 imageStack=skio.imread(imagePath) 
 # scale variable for displayed vector size; bigger value = smaller vector
 scale = 1
@@ -61,7 +61,7 @@ def calcVectors(flowArray):
     widths = np.diff(bins)
     # set the histogram radius equal to counts; could modify this to set bar *area* proportional to counts instead of height
     radius = n
-    return(bins, widths, radius)
+    return(flatMagnitudes, bins, widths, radius)
 
 # calculates flow with default values
 flow = calcFlow(frame1 = firstFrame, 
@@ -74,12 +74,15 @@ flow = calcFlow(frame1 = firstFrame,
                 polS = 1.5, 
                 flag = 1) 
 # calculates histogram bins, widths, and heights
-bins, widths, radius = calcVectors(flow)                    
+flatmags, bins, widths, radius = calcVectors(flow)                    
 
 '''***** Plots and Sliders *****'''
-fig = plt.figure()                            
-ax1 = plt.subplot(1, 2, 1)                    
-ax2 = plt.subplot(1, 2, 2, projection='polar')
+fig = plt.figure(figsize=(10,5))                            
+ax1 = plt.subplot(1, 3, 1)                    
+ax2 = plt.subplot(1, 3, 2, projection='polar')
+ax3 = plt.subplot(1, 3, 3)
+fig.subplots_adjust(wspace = 0.5)
+
 fig.subplots_adjust(top = 0.8)        
 
 # create slider axes
@@ -120,6 +123,14 @@ histBars = ax2.bar(x = bins[:-1],
 ax2.set_theta_zero_location("E")
 ax2.set_yticks([])
 
+box = ax3.boxplot(flatmags)
+x, y = box['medians'][0].get_xydata()[1]
+mymean = str(round(flatmags.mean(),2))
+mystd = str(round(flatmags.std(), 2))
+text = f'Mean: {mymean} \nStd: {mystd}'
+ax3.annotate(text, xy=(x, y))
+ax3.set_ylabel('Magnitude')
+
 '''***** Update on Sliders *****'''
 def update(val):
     # pull values from the sliders    
@@ -147,9 +158,18 @@ def update(val):
     imgMerge.set_data(imageStack[f])        # updates image to display
 
     # recalculate and reset new bar heights
-    b, wi, radius = calcVectors(flow)
+    m, b, wi, radius = calcVectors(flow)
     for i in range(len(radius)):
         histBars[i].set_height(radius[i])
+
+    # update ax3 boxplot
+    ax3.cla()
+    box = ax3.boxplot(m)
+    x, y = box['medians'][0].get_xydata()[1]
+    mymean = str(round(m.mean(),2))
+    mystd = str(round(m.std(), 2))
+    text = f'Mean: {mymean} \nStd: {mystd}'
+    ax3.annotate(text, xy=(x, y))
 
     # re-scales polar histogram y-axis
     ax2.set_ylim(top = np.max(radius))

@@ -13,12 +13,12 @@ import scipy.ndimage as nd
 #Tk().withdraw()                 
 #imagePath = askopenfilename(initialdir = './test_data')       # full path to 1-channel image
 imagePath = "/Users/bementmbp/Desktop/Scripts/opticalFlow/test_data/200102_BZ_crop.tif"    # If you want to hard code an image path
-imagePath = "/Users/bementmbp/Desktop/leslie.tif"
+#imagePath = "/Users/bementmbp/Desktop/leslie.tif"
 imageStack=skio.imread(imagePath) 
 # scale variable for displayed vector size; bigger value = smaller vector
 scale = 1
 # step size for vectors. Larger value = less vectors displayed
-step = 25
+step = 2
 # skip frames when comparing. Default is to compare consecutive frames (i.e., skip zero)
 framesToSkip = 0
  # number of bins for the polar histogram
@@ -55,16 +55,13 @@ def calcFlow(frame1, frame2, pyr, lev, win, it, polN, polS, flag):
 def calcVectors(flowArray):
     # converts flow to magnitude and angels; multiple vectors by -1 to get the angles along the same axis as image
     mags, angs = cv.cartToPolar(flowArray[:,:,0], flowArray[:,:,1]*(-1), angleInDegrees = False)
-    # flatten the angles and magnitudes to calculate the histogram
-    flatAngles = angs.flatten()                           
-    flatMagnitudes = mags.flatten()
     # n is the counts and bins is ndarray of the equally spaced bins between (-pi, pi)       
-    n, bins = np.histogram(flatAngles, bins=useBins, weights = flatMagnitudes)
+    n, bins = np.histogram(angs.ravel(), bins=useBins, weights = mags.ravel())
     # ndarray; width of each bin
     widths = np.diff(bins)
     # set the histogram radius equal to counts; could modify this to set bar *area* proportional to counts instead of height
     radius = n
-    return(flatMagnitudes, bins, widths, radius)
+    return(mags, bins, widths, radius)
 
 # calculates flow with default values
 flow = calcFlow(frame1 = firstFrame, 
@@ -77,17 +74,15 @@ flow = calcFlow(frame1 = firstFrame,
                 polS = 1.5, 
                 flag = 1) 
 # calculates histogram bins, widths, and heights
-flatmags, bins, widths, radius = calcVectors(flow)                    
+mags, bins, widths, radius = calcVectors(flow)                    
 
 '''***** Plots and Sliders *****'''
-fig = plt.figure(figsize=(10,5))                            
-ax1 = plt.subplot(1, 3, 1)                    
-ax2 = plt.subplot(1, 3, 2, projection='polar')
-ax3 = plt.subplot(1, 3, 3)
-
-fig.subplots_adjust(wspace = 0.5)
-
-fig.subplots_adjust(top = 0.8)        
+fig = plt.figure()      
+ax1 = plt.subplot(2, 2, 1)                    
+ax2 = plt.subplot(2, 2, 2, projection='polar')
+ax3 = plt.subplot(2, 2, 3)
+ax4 = plt.subplot(2, 2, 4)
+fig.subplots_adjust(top=0.65, wspace=0.05, hspace=0.05)       
 
 # create slider axes
 winAx = fig.add_axes([.185, 0.9, 0.25, 0.05])       # rectangle of size [x0, y0, width, height]
@@ -125,8 +120,10 @@ def get_rgb(frame1, frame2):
     return(merge)
 
 imgMerge = ax1.imshow(get_rgb(firstFrame, secondFrame), aspect = "equal") 
-ax1.set_xticks([])
-ax1.set_yticks([])
+mags_img = ax3.imshow(mags, aspect = "equal")
+for ax in (ax1, ax3):
+    ax.set_xticks([])
+    ax.set_yticks([])
 
 # matplotlib.quiver.Quiver object overlayed on axes image
 arrowsMerge = ax1.quiver(np.arange(0, flow.shape[1], step), 
@@ -145,14 +142,13 @@ histBars = ax2.bar(x = bins[:-1],
 ax2.set_theta_zero_location("E")
 ax2.set_yticks([])
 
-box = ax3.boxplot(flatmags)
+box = ax4.boxplot(mags.ravel())
 x, y = box['medians'][0].get_xydata()[1]
-mymean = str(round(flatmags.mean(),2))
-mystd = str(round(flatmags.std(), 2))
+mymean = str(round(mags.mean(),2))
+mystd = str(round(mags.std(), 2))
 text = f'Mean: {mymean} \nStd: {mystd}'
-ax3.annotate(text, xy=(x, y))
-ax3.set_ylabel('Pixel shift / frame')
-ax3.set_aspect(aspect = 'equal', adjustable = 'box')
+ax4.annotate(text, xy=(x, y))
+ax4.set_ylabel('Pixel shift / frame')
 
 '''***** Update on Sliders *****'''
 def update(val):
@@ -181,23 +177,25 @@ def update(val):
     arrowsMerge.set_UVC(flow[::step, ::step, 0]*scale, 
                         flow[::step, ::step, 1]*-1*scale)    
 
-    # update images to display
-    imgMerge.set_data(get_rgb(first, second))        # updates image to display
-
     # recalculate and reset new bar heights
     m, b, wi, radius = calcVectors(flow)
     for i in range(len(radius)):
         histBars[i].set_height(radius[i])
 
-    # update ax3 boxplot
+    # update images to display
+    imgMerge.set_data(get_rgb(first, second))
     ax3.cla()
+    ax3.imshow(m, aspect = "equal")
+
+    # update ax4 boxplot
+    ax4.cla()
     m = m / (1 + skip)
-    box = ax3.boxplot(m)
+    box = ax4.boxplot(m.ravel())
     x, y = box['medians'][0].get_xydata()[1]
     mymean = str(round(m.mean(),2))
     mystd = str(round(m.std(), 2))
     text = f'Mean: {mymean} \nStd: {mystd}'
-    ax3.annotate(text, xy=(x, y))
+    ax4.annotate(text, xy=(x, y))
 
     # re-scales polar histogram y-axis
     ax2.set_ylim(top = np.max(radius))

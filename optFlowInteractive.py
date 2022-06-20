@@ -18,13 +18,21 @@ imagePath = "/Users/bementmbp/Desktop/Scripts/opticalFlow/test_data/200102_BZ_cr
 imagePath = "/Users/bementmbp/Desktop/leslie.tif"
 imageStack=skio.imread(imagePath) 
 
+# convert to 8 bit
+def normalize(im: np.ndarray):
+    '''
+    Normalizes the intensity of a 2D ndarray (grayscale image)
+    '''
+    return((im - im.min()) / (im.max() - im.min()))
+imageStack = (normalize(imageStack) * 256).astype(np.uint8)
+
 scale = 1                                                               # scale variable for displayed vector size; bigger value = smaller vector
 vect_step = 2                                                           # step size for vectors. Larger value = less vectors displayed
 framesToSkip = 0                                                        # skip frames when comparing. Default is to compare consecutive frames (i.e., skip zero)
 numBins = 64                                                            # number of bins for the polar histogram
 start = 0                                                               # starting frame to compare
-first_frame = imageStack[start][20:-20,20:-20]                          # sets first image frame
-second_frame = imageStack[start+framesToSkip+1][20:-20,20:-20]          # sets second image frame
+first_frame = imageStack[start]                          # sets first image frame
+second_frame = imageStack[start+framesToSkip+1]          # sets second image frame
 useBins = np.array([i*(6.28/numBins) for i in range(numBins + 1)])      # full of equally radian values around a circle
 
 
@@ -262,8 +270,8 @@ def update(val):
     sig = int(gauss_step_slider.val)
 
     # identify the frames to use for flow calculation
-    first = nd.gaussian_filter(imageStack[f][w:-w,w:-w], sigma = sig)
-    second = nd.gaussian_filter(imageStack[f+skip+1][w:-w,w:-w], sigma = sig)
+    first = nd.gaussian_filter(imageStack[f], sigma = sig)
+    second = nd.gaussian_filter(imageStack[f+skip+1], sigma = sig)
 
     # calculate the optical flow
     flow = calcFlow(frame1 = np.invert(first), 

@@ -37,6 +37,7 @@ if imageStack.ndim > 3:
 def calcFlow(frame1, frame2, pyr, lev, win, it, polN, polS, flag):
     '''
     Calculates optical flow between two frames using the Farneback algorithm.
+    docs.opencv.org/2.4/modules/video/doc/motion_analysis_and_object_tracking.html#calcopticalflowfarneback
     Returns a ndarray of the flow vectors
     '''
     flow = cv.calcOpticalFlowFarneback(prev = np.invert(np.array(frame1)), 

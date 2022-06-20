@@ -7,10 +7,12 @@ def main():
     gui.mainloop()
 
     folder_path = gui.folder_path
-    custom_step = gui.manual_step
-    blur = gui.blur
-    custom_step_size = gui.manual_step_size
-    blur_sigma = gui.blur_sigma
+    window_size = gui.window_size
+    polyN_size = gui.polyN_size
+    polyS_size = gui.polyS_size
+    frames_to_skip = gui.frame_skip_num
+    vectors_to_skip = gui.vector_skip_num
+    gauss_sigma = gui.gauss_sigma
 
     ims = [im_name for im_name in os.listdir(folder_path) if im_name.endswith('.tif') and not im_name.startswith('.')]
 

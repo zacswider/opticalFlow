@@ -5,6 +5,7 @@ from tkinter import Tk
 import skimage.io as skio
 import matplotlib.pyplot as plt
 from pylab import *
+import colour
 from matplotlib.widgets import Slider
 from tkinter.filedialog import askopenfilename
 import scipy.ndimage as nd 
@@ -31,6 +32,8 @@ firstFrame = imageStack[start]
 secondFrame = imageStack[start+framesToSkip+1]
 #full of equally radian values around a circle
 useBins = np.array([i*(6.28/numBins) for i in range(numBins + 1)])   
+
+brightness = 1000 
 
 '''***** Quality Control *****'''
 if imageStack.ndim > 3:
@@ -62,6 +65,38 @@ def calcVectors(flowArray):
     # set the histogram radius equal to counts; could modify this to set bar *area* proportional to counts instead of height
     radius = n
     return(mags, bins, widths, radius)
+
+def draw_hsv(flow, brightness = 1000):                         #openCV function for drawing flow fields, with my modifications
+    h, w = flow.shape[:2]
+    fx, fy = flow[:,:,0], flow[:,:,1]
+    ang = np.arctan2(fy, fx) + np.pi
+    v = np.sqrt(fx*fx+fy*fy)
+    hsv = np.zeros((h, w, 3), np.uint8)
+    hsv[...,0] = ang*(180/np.pi/2)
+    hsv[...,1] = 255
+    hsv[...,2] = np.minimum(v*brightness, 255)
+    bgr = cv.cvtColor(hsv, cv.COLOR_HSV2BGR)
+    return bgr
+
+def colour_wheel(samples=1024, clip_circle=True, method='Colour'): #https://stackoverflow.com/a/62544063/4812591
+    xx, yy = np.meshgrid(
+        np.linspace(-1, 1, samples), np.linspace(-1, 1, samples))
+    S = np.sqrt(xx ** 2 + yy ** 2)    
+    H = (np.arctan2(xx, yy) + np.pi) / (np.pi * 2)
+    HSV = colour.utilities.tstack([H, S, np.ones(H.shape)])
+    RGB = colour.HSV_to_RGB(HSV)
+    if clip_circle == True:
+        RGB[S > 1] = 0
+        A = np.where(S > 1, 0, 1)
+    else:
+        A = np.ones(S.shape)
+    if method.lower()== 'matplotlib':
+        RGB = colour.utilities.orient(RGB, '90 CW')
+    elif method.lower()== 'nuke':
+        RGB = colour.utilities.orient(RGB, 'Flip')
+        RGB = colour.utilities.orient(RGB, '90 CW')
+    R, G, B = colour.utilities.tsplit(RGB)
+    return colour.utilities.tstack([R, G, B, A])
 
 # calculates flow with default values
 flow = calcFlow(frame1 = firstFrame, 

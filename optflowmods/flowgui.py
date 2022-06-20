@@ -16,12 +16,18 @@ class FlowGUI(tk.Tk):
 
         # define variable types for the different widget field
         self.folder_path = tk.StringVar()
-        self.manual_step = tk.BooleanVar()
-        self.manual_step_size = tk.IntVar()
-        self.manual_step_size.set(0)
-        self.blur = tk.BooleanVar()
-        self.blur_sigma = tk.IntVar()
-        self.blur_sigma.set(0)
+        self.window_size = tk.IntVar()
+        self.window_size.set(20)
+        self.polyN_size = tk.IntVar()
+        self.polyN_size.set(7)
+        self.polyS_size = tk.DoubleVar()
+        self.polyS_size.set(1.5)
+        self.frame_skip_num = tk.IntVar()
+        self.frame_skip_num.set(0)
+        self.vector_skip_num = tk.IntVar()
+        self.vector_skip_num.set(2)
+        self.gauss_sigma = tk.IntVar()
+        self.gauss_sigma.set(0)
 
         # file path selection widget
         self.file_path_entry = ttk.Entry(self, textvariable = self.folder_path)
@@ -31,36 +37,42 @@ class FlowGUI(tk.Tk):
         self.file_path_button['command'] = self.get_folder_path
         self.file_path_button.grid(row = 0, column = 1, padx = 10, sticky = 'W')        
 
-        # check box to manually enter a frame step
-        self.manual_step_checkbox = ttk.Checkbutton(self, variable = self.manual_step)
-        self.manual_step_checkbox.grid(row = 1, column = 0, padx = 10, sticky = 'E')
-        self.manual_step_checkbox['command'] = self.activateCheck
-        self.manual_step_checkbox_label = ttk.Label(self, text = 'Enter a custom step size')
-        self.manual_step_checkbox_label.grid(row = 1, column = 1, padx = 10, sticky = 'W')
+        # entry widget for window size step
+        self.window_size_entry = ttk.Entry(self, textvariable = self.window_size, width = 3)
+        self.window_size_entry.grid(row = 1, column = 0, padx = 10, sticky = 'E')
+        self.window_size_entry = ttk.Label(self, text = 'Window size')
+        self.window_size_entry.grid(row = 1, column = 1, padx = 10, sticky = 'W')
 
-        # entry widget for manual frame step
-        self.manual_step_entry = ttk.Entry(self, textvariable = self.manual_step_size, width = 3)
-        self.manual_step_entry.grid(row = 2, column = 0, padx = 10, sticky = 'E')
-        self.manual_step_entry.configure(state = 'disabled')
-        self.manual_step_entry_label = ttk.Label(self, text = 'Enter a custom step size')
-        self.manual_step_entry_label.grid(row = 2, column = 1, padx = 10, sticky = 'W')
+        # entry widget for polyN size
+        self.polyN_size_entry = ttk.Entry(self, textvariable = self.polyN_size, width = 3)
+        self.polyN_size_entry.grid(row = 2, column = 0, padx = 10, sticky = 'E')
+        self.polyN_size_entry = ttk.Label(self, text = 'PolyN (px)')
+        self.polyN_size_entry.grid(row = 2, column = 1, padx = 10, sticky = 'W')
 
-        # check box to blur the image
-        self.blur_checkbox = ttk.Checkbutton(self, variable = self.blur)
-        self.blur_checkbox.grid(row = 3, column = 0, padx = 10, sticky = 'E')
-        self.blur_checkbox['command'] = self.activateCheck
-        self.blur_checkbox_label = ttk.Label(self, text = 'Blur the image')
-        self.blur_checkbox_label.grid(row = 3, column = 1, padx = 10, sticky = 'W')
+        # entry widget for polyS size
+        self.polyS_size_entry = ttk.Entry(self, textvariable = self.polyS_size, width = 3)
+        self.polyS_size_entry.grid(row = 3, column = 0, padx = 10, sticky = 'E')
+        self.polyS_size_entry = ttk.Label(self, text = 'PolyS (sigma)')
+        self.polyS_size_entry.grid(row = 3, column = 1, padx = 10, sticky = 'W')
 
-        # entry widget for blur sigma
-        self.blur_sigma_entry = ttk.Entry(self, textvariable = self.blur_sigma, width = 3)
-        self.blur_sigma_entry.grid(row = 4, column = 0, padx = 10, sticky = 'E')
-        self.blur_sigma_entry.configure(state = 'disabled')
-        self.blur_sigma_entry_label = ttk.Label(self, text = 'Gaussian sigma value')
-        self.blur_sigma_entry_label.grid(row = 4, column = 1, padx = 10, sticky = 'W')
+        # entry widget for frame skip
+        self.frame_skip_num_entry = ttk.Entry(self, textvariable = self.frame_skip_num, width = 3)
+        self.frame_skip_num_entry.grid(row = 4, column = 0, padx = 10, sticky = 'E')
+        self.frame_skip_num_entry = ttk.Label(self, text = 'Frame to skip')
+        self.frame_skip_num_entry.grid(row = 4, column = 1, padx = 10, sticky = 'W')
 
+        # entry widget for vector skip
+        self.vector_skip_num_entry = ttk.Entry(self, textvariable = self.vector_skip_num, width = 3)
+        self.vector_skip_num_entry.grid(row = 5, column = 0, padx = 10, sticky = 'E')
+        self.vector_skip_num_entry = ttk.Label(self, text = 'Vector density')
+        self.vector_skip_num_entry.grid(row = 5, column = 1, padx = 10, sticky = 'W')
 
-
+        # entry widget for gauss sigma
+        self.gauss_sigma_entry = ttk.Entry(self, textvariable = self.gauss_sigma, width = 3)
+        self.gauss_sigma_entry.grid(row = 6, column = 0, padx = 10, sticky = 'E')
+        self.gauss_sigma_entry = ttk.Label(self, text = 'Gaussian blur sigma')
+        self.gauss_sigma_entry.grid(row = 6, column = 1, padx = 10, sticky = 'W')
+    
         # create start button
         self.start_button = ttk.Button(self, text = 'Start analysis')
         self.start_button['command'] = self.start_analysis
@@ -74,27 +86,19 @@ class FlowGUI(tk.Tk):
     def get_folder_path(self):
         self.folder_path.set(askdirectory())
 
-
-    def activateCheck(self):
-        if self.manual_step.get() == True:
-            self.manual_step_entry.configure(state = 'normal')
-        if self.manual_step.get() == False:
-            self.manual_step_entry.configure(state = 'disabled')
-        if self.blur.get() == True:
-            self.blur_sigma_entry.configure(state = 'normal')
-        if self.blur.get() == False:
-            self.blur_sigma_entry.configure(state = 'disabled')
-
     def cancel_analysis(self):
         sys.exit('You have cancelled the analysis')
     
     def start_analysis(self):
         # get the values stored in the widget
         self.folder_path = self.folder_path.get()
-        self.manual_step = self.manual_step.get()
-        self.manual_step_size = self.manual_step_size.get()
-        self.blur = self.blur.get()
-        self.blur_sigma = self.blur_sigma.get()
+        self.window_size = self.window_size.get()
+        self.polyN_size = self.polyN_size.get()
+        self.polyS_size = self.polyS_size.get()
+        self.frame_skip_num = self.frame_skip_num.get()
+        self.vector_skip_num = self.vector_skip_num.get()
+        self.gauss_sigma = self.gauss_sigma.get()
+        
 
 
         # destroy the widget

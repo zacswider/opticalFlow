@@ -18,7 +18,7 @@ imageStack=skio.imread(imagePath)
 # scale variable for displayed vector size; bigger value = smaller vector
 scale = 1
 # step size for vectors. Larger value = less vectors displayed
-step = 2
+vect_step = 2
 # skip frames when comparing. Default is to compare consecutive frames (i.e., skip zero)
 framesToSkip = 0
  # number of bins for the polar histogram
@@ -78,10 +78,12 @@ mags, bins, widths, radius = calcVectors(flow)
 
 '''***** Plots and Sliders *****'''
 fig = plt.figure()      
-ax1 = plt.subplot(2, 2, 1)                    
-ax2 = plt.subplot(2, 2, 2, projection='polar')
-ax3 = plt.subplot(2, 2, 3)
-ax4 = plt.subplot(2, 2, 4)
+ax1 = plt.subplot(2, 3, 1)                    
+ax2 = plt.subplot(2, 3, 2, projection='polar')
+ax3 = plt.subplot(2, 3, 3)
+ax4 = plt.subplot(2, 3, 4)
+ax5 = plt.subplot(2, 3, 5)
+ax6 = plt.subplot(2, 3, 6)
 fig.subplots_adjust(top=0.65, wspace=0.05, hspace=0.05)       
 
 # create slider axes
@@ -94,8 +96,8 @@ sValues = np.linspace(0.1,2.0,20)
 startAx = fig.add_axes([.6, 0.825, 0.25, 0.05])
 skipValues = np.linspace(0,25,25)
 skipAx = fig.add_axes([.185, 0.75, 0.25, 0.05])
-gaus_values = np.linspace(0,16,16)
-gaus_ax = fig.add_axes([.6, 0.75, 0.25, 0.05])
+vect_step_values = np.linspace(1,16,16)
+vect_step_values_ax = fig.add_axes([.6, 0.75, 0.25, 0.05])
 
 # creates sliders
 startValues = np.linspace(0 ,imageStack.shape[0], imageStack.shape[0], endpoint=False)  # sets starting frame values
@@ -104,7 +106,7 @@ nSlider = Slider(ax=nAx, label='polyN', valmin=1, valmax=9, valinit=7, valfmt=' 
 sSlider = Slider(ax=sAx, label='polyS', valmin=0.1, valmax=2.0, valinit=1.5, valfmt=' %1.1f Px', valstep=sValues, facecolor='#cc7000')                                  # poly_sigma size slider parameters
 startSlider = Slider(ax=startAx, label='start', valmin=0, valmax=imageStack.shape[0], valinit=0, valfmt='Frame %0.0f ', valstep=startValues, facecolor='#cc7000')       # start frame slider parameters
 skipSlider = Slider(ax=skipAx, label='skip', valmin=0, valmax=25, valinit=0, valfmt=' %0.0f frames', valstep=skipValues, facecolor='#cc7000')                           
-gaus_slider = Slider(ax=gaus_ax, label='gaus', valmin=0, valmax=16, valinit=0, valfmt=' %0.0f sigma', valstep=gaus_values, facecolor='#cc7000')
+vect_step_slider = Slider(ax=vect_step_values_ax, label='vect', valmin=0, valmax=16, valinit=0, valfmt=' %0.0f skip', valstep=vect_step_values, facecolor='#cc7000')
 
 # show the first frame
 
@@ -126,9 +128,9 @@ for ax in (ax1, ax3):
     ax.set_yticks([])
 
 # matplotlib.quiver.Quiver object overlayed on axes image
-arrowsMerge = ax1.quiver(np.arange(0, flow.shape[1], step), 
-                         np.flipud(np.arange(flow.shape[0]-1, -1, -step)),   
-                         flow[::step, ::step, 0]*scale, flow[::step, ::step, 1]*-1*scale, color="c")
+arrowsMerge = ax1.quiver(np.arange(0, flow.shape[1], vect_step), 
+                         np.flipud(np.arange(flow.shape[0]-1, -1, -vect_step)),   
+                         flow[::vect_step, ::vect_step, 0]*scale, flow[::vect_step, ::vect_step, 1]*-1*scale, color="c")
 
 # Bar plot using histogram data
 histBars = ax2.bar(x = bins[:-1], 
@@ -158,9 +160,9 @@ def update(val):
     s = sSlider.val
     f = int(startSlider.val)
     skip = int(skipSlider.val)
-    sig = int(gaus_slider.val)
-    first = nd.gaussian_filter(imageStack[f], sigma = sig)
-    second = nd.gaussian_filter(imageStack[f+skip+1], sigma = sig)
+    vs = int(vect_step_slider.val)
+    first = imageStack[f]
+    second = imageStack[f+skip+1]
 
     # update the flow
     flow = calcFlow(frame1 = first, 
@@ -173,9 +175,7 @@ def update(val):
                     polS = s, 
                     flag = 1)   
     
-    # update arrows with new vector coordinates
-    arrowsMerge.set_UVC(flow[::step, ::step, 0]*scale, 
-                        flow[::step, ::step, 1]*-1*scale)    
+  
 
     # recalculate and reset new bar heights
     m, b, wi, radius = calcVectors(flow)
@@ -183,7 +183,14 @@ def update(val):
         histBars[i].set_height(radius[i])
 
     # update images to display
-    imgMerge.set_data(get_rgb(first, second))
+    ax1.cla()
+    ax1.imshow(get_rgb(first, second))
+    # matplotlib.quiver.Quiver object overlayed on axes image
+    ax1.quiver(np.arange(0, flow.shape[1], vs), 
+                         np.flipud(np.arange(flow.shape[0]-1, -1, -vs)),   
+                         flow[::vs, ::vs, 0]*scale, flow[::vs, ::vs, 1]*-1*scale, color="c")
+
+
     ax3.cla()
     ax3.imshow(m, aspect = "equal")
 
@@ -207,5 +214,5 @@ nSlider.on_changed(update)
 sSlider.on_changed(update)                  
 startSlider.on_changed(update) 
 skipSlider.on_changed(update)     
-gaus_slider.on_changed(update)        
+vect_step_slider.on_changed(update)        
 plt.show()

@@ -37,9 +37,8 @@ if imageStack.ndim > 3:
 def calcFlow(frame1, frame2, pyr, lev, win, it, polN, polS, flag):
     '''
     Calculates optical flow between two frames using the Farneback algorithm.
-    Returns a ndarray of the flow vectors. 
+    Returns a ndarray of the flow vectors
     '''
-    # https://docs.opencv.org/2.4/modules/video/doc/motion_analysis_and_object_tracking.html#calcopticalflowfarneback
     flow = cv.calcOpticalFlowFarneback(prev = np.invert(np.array(frame1)), 
                                        next = np.invert(np.array(frame2)), 
                                        flow = None,
@@ -53,6 +52,10 @@ def calcFlow(frame1, frame2, pyr, lev, win, it, polN, polS, flag):
     return(flow)
 
 def calcVectors(flowArray):
+    '''
+    Converts flow vectors to magnitude and angles. 
+    Returns magnitudes as well as histogram bin properties
+    '''
     # converts flow to magnitude and angels; multiple vectors by -1 to get the angles along the same axis as image
     mags, angs = cv.cartToPolar(flowArray[:,:,0], flowArray[:,:,1]*(-1), angleInDegrees = False)
     # n is the counts and bins is ndarray of the equally spaced bins between (-pi, pi)       
@@ -132,21 +135,7 @@ def plot_boxes(ax, data: list, labels: list):
         data_mean = str(round(np.mean(data[i]), 2))
         data_std = str(round(np.std(data[i]), 2))
         text = f'Mean: {data_mean}\nStd: {data_std}'
-        ax.text(x, y, text, fontsize = 'xx-small', color = '#cc7000')
-
-# calculates flow with default values
-flow = calcFlow(frame1 = np.invert(first_frame), 
-                frame2 = np.invert(second_frame), 
-                pyr =0.5, 
-                lev = 3, 
-                win = 20, 
-                it = 3, 
-                polN = 7, 
-                polS = 1.5, 
-                flag = 1) 
-print(flow.shape)
-# calculates histogram bins, widths, and heights
-mags, bins, widths, radius = calcVectors(flow)                    
+        ax.text(x, y, text, fontsize = 'xx-small', color = '#cc7000')                  
 
 '''***** Plots and Sliders *****'''
 fig = plt.figure(figsize=(12,8))      
@@ -182,6 +171,20 @@ startSlider = Slider(ax=startAx, label='start', valmin=0, valmax=imageStack.shap
 skipSlider = Slider(ax=skipAx, label='skip', valmin=0, valmax=25, valinit=0, valfmt=' %0.0f frames', valstep=skipValues, facecolor='#cc7000')                           
 vect_step_slider = Slider(ax=vect_step_values_ax, label='vect', valmin=1, valmax=16, valinit=2, valfmt=' %0.0f skip', valstep=vect_step_values, facecolor='#cc7000')
 gauss_step_slider = Slider(ax=gauss_step_values_ax, label='gauss', valmin=0, valmax=16, valinit=0, valfmt=' %0.0f sigma', valstep=gauss_step_values, facecolor='#cc7000')
+
+''' ***** Plotting ***** '''
+# calculates flow with default values
+flow = calcFlow(frame1 = np.invert(first_frame), 
+                frame2 = np.invert(second_frame), 
+                pyr =0.5, 
+                lev = 3, 
+                win = 20, 
+                it = 3, 
+                polN = 7, 
+                polS = 1.5, 
+                flag = 1) 
+# calculates histogram bins, widths, and heights
+mags, bins, widths, radius = calcVectors(flow)  
 
 # show images
 ax1.imshow(merge_frames(first_frame, second_frame), aspect = "equal") 

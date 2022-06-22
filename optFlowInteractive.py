@@ -2,7 +2,7 @@ import sys
 import cv2 as cv
 import numpy as np
 from tkinter import Tk
-import skimage.io as skio
+from tifffile import imread, TiffFile
 import matplotlib.pyplot as plt
 import colour
 from matplotlib.widgets import Slider
@@ -12,34 +12,49 @@ from skimage.filters import threshold_otsu
 import time
 
 '''***** Default Parameters *****'''
-#Tk().withdraw()                 
-#imagePath = askopenfilename(initialdir = './test_data')       # full path to 1-channel image
-imagePath = "/Users/bementmbp/Desktop/Scripts/opticalFlow/test_data/200102_BZ_crop.tif"    # If you want to hard code an image path
-imagePath = "/Users/bementmbp/Desktop/leslie.tif"
-imageStack=skio.imread(imagePath) 
+Tk().withdraw()                 
+image_path = askopenfilename(initialdir = './test_data')       # full path to 1-channel image
+image_stack=imread(image_path) 
 
-# convert to 8 bit
+# check image dimensions
+with TiffFile(image_path) as tif_file:
+    metadata = tif_file.imagej_metadata
+num_channels = metadata.get('channels', 1)
+num_slices = metadata.get('slices', 1)
+num_frames = metadata.get('frames', 1)
+
+# image stack must be single channel time lapse
+if num_channels > 1:
+    print('Image stack must be single channel time lapse')
+    sys.exit()
+if num_frames < 2:
+    print('Image stack must have at least two slices')
+    sys.exit()
+if num_slices > 1:
+    print('Image stack must be max projected or have only one slice')
+    sys.exit()
+
+# convert to 8 bit, if it isn't already
 def normalize(im: np.ndarray):
     '''
     Normalizes the intensity of a 2D ndarray (grayscale image)
     '''
-    return((im - im.min()) / (im.max() - im.min()))
-imageStack = (normalize(imageStack) * 256).astype(np.uint8)
+    nomalized = ((im - im.min()) / (im.max() - im.min()) * 255).astype(np.uint8)
+    return nomalized
 
+if not image_stack.dtype == np.uint8:
+    image_stack = (normalize(image_stack))
+
+'''***** Defaults for starting *****'''
 scale = 1                                                               # scale variable for displayed vector size; bigger value = smaller vector
 vect_step = 2                                                           # step size for vectors. Larger value = less vectors displayed
 framesToSkip = 0                                                        # skip frames when comparing. Default is to compare consecutive frames (i.e., skip zero)
 numBins = 64                                                            # number of bins for the polar histogram
 start = 0                                                               # starting frame to compare
-first_frame = imageStack[start]                          # sets first image frame
-second_frame = imageStack[start+framesToSkip+1]          # sets second image frame
+win = 20                                                          # starting window size for Farneback algorithm 
+first_frame = image_stack[start]                          # sets first image frame
+second_frame = image_stack[start+framesToSkip+1]          # sets second image frame
 useBins = np.array([i*(6.28/numBins) for i in range(numBins + 1)])      # full of equally radian values around a circle
-
-
-'''***** Quality Control *****'''
-if imageStack.ndim > 3:
-    print('The image has greater than three dimensions. Please load a single channel time lapse.')
-    sys.exit()
 
 '''***** Functions *****'''
 def calcFlow(frame1, frame2, pyr, lev, win, it, polN, polS, flag):
@@ -134,7 +149,7 @@ def merge_frames(frame1, frame2):
 
 def plot_boxes(ax, data: list, labels: list):
     '''
-    Accepts an xis object, list of arrays of plot, and a list of labels
+    Accepts an axis object, list of arrays of plot, and a list of labels
     to assign to the plotted arrays. Calculated the mean and std of each
     plotted array and annotates the values next to each plot.
     '''
@@ -172,11 +187,11 @@ gauss_step_values = np.linspace(0,16,16)
 gauss_step_values_ax = fig.add_axes([.185, 0.825, 0.25, 0.025])
 
 # creates sliders
-startValues = np.linspace(0 ,imageStack.shape[0], imageStack.shape[0], endpoint=False)  # sets starting frame values
+startValues = np.linspace(0 ,image_stack.shape[0], image_stack.shape[0], endpoint=False)  # sets starting frame values
 winSlider = Slider(ax=winAx, label='win', valmin=1, valmax=100, valinit=20, valfmt=' %0.0f Px', valstep=winValues, facecolor='#cc7000')                                 # window size slider parameters
 nSlider = Slider(ax=nAx, label='polyN', valmin=1, valmax=9, valinit=7, valfmt=' %0.0f Px', valstep=nValues, facecolor='#cc7000')                                        # poly_n size slider parameters
 sSlider = Slider(ax=sAx, label='polyS', valmin=0.1, valmax=2.0, valinit=1.5, valfmt=' %1.1f Px', valstep=sValues, facecolor='#cc7000')                                  # poly_sigma size slider parameters
-startSlider = Slider(ax=startAx, label='start', valmin=0, valmax=imageStack.shape[0], valinit=0, valfmt='Frame %0.0f ', valstep=startValues, facecolor='#cc7000')       # start frame slider parameters
+startSlider = Slider(ax=startAx, label='start', valmin=0, valmax=image_stack.shape[0], valinit=0, valfmt='Frame %0.0f ', valstep=startValues, facecolor='#cc7000')       # start frame slider parameters
 skipSlider = Slider(ax=skipAx, label='skip', valmin=0, valmax=25, valinit=0, valfmt=' %0.0f frames', valstep=skipValues, facecolor='#cc7000')                           
 vect_step_slider = Slider(ax=vect_step_values_ax, label='vect', valmin=1, valmax=16, valinit=2, valfmt=' %0.0f skip', valstep=vect_step_values, facecolor='#cc7000')
 gauss_step_slider = Slider(ax=gauss_step_values_ax, label='gauss', valmin=0, valmax=16, valinit=0, valfmt=' %0.0f sigma', valstep=gauss_step_values, facecolor='#cc7000')
@@ -192,6 +207,10 @@ flow = calcFlow(frame1 = np.invert(first_frame),
                 polN = 7, 
                 polS = 1.5, 
                 flag = 1) 
+
+# trim the edges to account for windowing
+flow = flow[win:-win, win:-win]
+
 # calculates histogram bins, widths, and heights
 mags, bins, widths, radius = calcVectors(flow)  
 
@@ -236,11 +255,11 @@ filtered_mags = mags[mags_mask]
 # generate otsu threshold of raw frame 1
 frame1_thresh = threshold_otsu(np.maximum(first_frame, second_frame))
 frame1_mask = np.maximum(first_frame, second_frame) > frame1_thresh
-filtered_frame1 = mags[frame1_mask]
+filtered_frame1 = mags[frame1_mask[win:-win, win:-win]]
 
 masks_merged = np.zeros((mags.shape[0], mags.shape[1], 3))
 masks_merged[:,:,0] = mags_mask
-masks_merged[:,:,1] = frame1_mask
+masks_merged[:,:,1] = frame1_mask[win:-win, win:-win]
 masks_merged[:,:,2] = mags_mask
 ax5.imshow(masks_merged, aspect = "equal")
 ax5.set_xlabel('Magenta = Otsu threshhold of mags\nGreen = Otsu threshold of Frame1')
@@ -270,8 +289,8 @@ def update(val):
     sig = int(gauss_step_slider.val)
 
     # identify the frames to use for flow calculation
-    first = nd.gaussian_filter(imageStack[f], sigma = sig)
-    second = nd.gaussian_filter(imageStack[f+skip+1], sigma = sig)
+    first = nd.gaussian_filter(image_stack[f], sigma = sig)
+    second = nd.gaussian_filter(image_stack[f+skip+1], sigma = sig)
 
     # calculate the optical flow
     flow = calcFlow(frame1 = np.invert(first), 
@@ -282,7 +301,10 @@ def update(val):
                     it = 3, 
                     polN = n, 
                     polS = s, 
-                    flag = 1)   
+                    flag = 1) 
+    
+    # trim the edges to account for windowing
+    flow = flow[w:-w, w:-w]
 
     # update ax1
     ax1.cla()
@@ -314,11 +336,11 @@ def update(val):
 
     frame1_thresh = threshold_otsu(np.maximum(first, second))
     frame1_mask = np.maximum(first, second) > frame1_thresh
-    filtered_frame1 = m[frame1_mask]
+    filtered_frame1 = m[frame1_mask[w:-w, w:-w]]
 
     masks_merged = np.zeros((m.shape[0], m.shape[1], 3))
     masks_merged[:,:,0] = mags_mask
-    masks_merged[:,:,1] = frame1_mask
+    masks_merged[:,:,1] = frame1_mask[w:-w, w:-w]
     masks_merged[:,:,2] = mags_mask
     ax5.imshow(masks_merged, aspect = "equal")
     ax5.quiver(np.arange(0, flow.shape[1], vs), 

@@ -1,15 +1,23 @@
 # opticalFlow
-Python script for visualizing optical flow from image sequences
+Python scripts for 
+1) Interactively modulating the variables for openCV dense optical flow (Farneback’s) method and visualizing optical flow.
+2) Batch calculating mean optical flow using parameters determined in part 1.
 
-optFlowInteractive.py uses a matplotlib slider interface to optimize window size, poly_n, and poly_sigma values for the openCV dense optical flow (Farneback’s) method. This script currently accepts the full path to a one-channel time lapse, which is read in and analyzed as a numpy ndarray. The matplotlib window shows an image frame overlayed with the vector field on the left, and a weighted histogram of the vectors on the right (example below).
+optFlowInteractive.py uses a matplotlib slider interface to optimize window size, poly_n, and poly_sigma values for the openCV dense optical flow (Farneback’s) method. This script currently accepts one-channel time lapse images:
 
-![alt text](https://github.com/zacswider/opticalFlow/blob/inProgress/interface.jpg)
+![alt text](https://github.com/zacswider/README_Images/blob/main/flowgui.png)
 
 Dependencies:
-- numpy
-- opencv
-- matplotlib
-- scikit-image
+  - numpy
+  - opencv
+  - tqdm
+  - tk
+  - pandas
+  - matplotlib
+  - tifffile
+  - scipy
+  - scikit-image
+  - colour-science
 
-
+Please see the environment .yml file to make your own environment.
 

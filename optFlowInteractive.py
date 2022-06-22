@@ -154,7 +154,7 @@ def plot_boxes(ax, data: list, labels: list):
     plotted array and annotates the values next to each plot.
     '''
     boxes = ax.boxplot(data, labels = labels)
-    for i in range(3):
+    for i in range(len(data)):
         x, y = boxes['medians'][i].get_xydata()[1]
         data_mean = str(round(np.mean(data[i]), 2))
         data_std = str(round(np.std(data[i]), 2))
@@ -252,21 +252,15 @@ mags_thresh = threshold_otsu(mags)
 mags_mask = mags > mags_thresh
 filtered_mags = mags[mags_mask]
 
-# generate otsu threshold of raw frame 1
-frame1_thresh = threshold_otsu(np.maximum(first_frame, second_frame))
-frame1_mask = np.maximum(first_frame, second_frame) > frame1_thresh
-filtered_frame1 = mags[frame1_mask[win:-win, win:-win]]
-
 masks_merged = np.zeros((mags.shape[0], mags.shape[1], 3))
 masks_merged[:,:,0] = mags_mask
-masks_merged[:,:,1] = frame1_mask[win:-win, win:-win]
 masks_merged[:,:,2] = mags_mask
 ax5.imshow(masks_merged, aspect = "equal")
 ax5.set_xlabel('Magenta = Otsu threshhold of mags\nGreen = Otsu threshold of Frame1')
     
 plot_boxes(ax6, 
-           [mags.ravel(), filtered_mags.ravel(), filtered_frame1.ravel()], 
-           ['All pixels', 'Thesh mags', 'Thresh waves'])
+           [mags.ravel(), filtered_mags.ravel()], 
+           ['All pixels', 'Thesh mags'])
 
 ax6.set_ylabel('Pixel shift / frame')
 ax6.tick_params(axis = 'x', labelrotation = 45)
@@ -334,28 +328,22 @@ def update(val):
     mags_mask = m > mags_thresh
     filtered_mags = m[mags_mask]
 
-    frame1_thresh = threshold_otsu(np.maximum(first, second))
-    frame1_mask = np.maximum(first, second) > frame1_thresh
-    filtered_frame1 = m[frame1_mask[w:-w, w:-w]]
-
     masks_merged = np.zeros((m.shape[0], m.shape[1], 3))
     masks_merged[:,:,0] = mags_mask
-    masks_merged[:,:,1] = frame1_mask[w:-w, w:-w]
     masks_merged[:,:,2] = mags_mask
     ax5.imshow(masks_merged, aspect = "equal")
     ax5.quiver(np.arange(0, flow.shape[1], vs), 
                          np.flipud(np.arange(flow.shape[0]-1, -1, -vs)),   
                          flow[::vs, ::vs, 0]*scale, flow[::vs, ::vs, 1]*-1*scale, color="c")
-    ax5.set_xlabel('Magenta = Otsu threshhold of mags\nGreen = Otsu threshold of Frame1')
+    ax5.set_xlabel('Magenta = Otsu threshhold of mags\nCyan = Vector field overlay')
 
     # update ax6
     ax6.cla()
     m = m / (1 + skip)
     filtered_mags = filtered_mags / (1 + skip)
-    filtered_frame1 = filtered_frame1 / (1 + skip)
     plot_boxes(ax6, 
-              [mags.ravel(), filtered_mags.ravel(), filtered_frame1.ravel()], 
-              ['All pixels', 'Thesh mags', 'Thresh waves'])
+              [mags.ravel(), filtered_mags.ravel()], 
+              ['All pixels', 'Thesh mags'])
     ax6.set_ylabel('Pixel shift / frame')
     ax6.tick_params(axis = 'x', labelrotation = 45)
 

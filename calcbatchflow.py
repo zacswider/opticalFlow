@@ -99,6 +99,27 @@ def main():
             file_summary = {}
             file_summary['file_name'] = im_name
             
+            def histogram(x, y, num_bins = 1000):
+                '''
+                Accepts: two 1D arrays, x and y, of any length.
+                Returns: a tuple is arrays corresponding to the histogram of x and y. Axis 0 of each arrays 
+                specifies the center of each bin, and axis 1 specifies the number of points in each bin.
+                '''
+                # find min and max values
+                min_val = min(np.min(x), np.min(y))
+                max_val = max(np.max(x), np.max(y))
+                # create a list of evenly spaced values between min_val and max_val
+                bins = np.linspace(min_val, max_val, num_bins)
+                # create histogram
+                x_hist = np.histogram(x, bins=bins)
+                y_hist = np.histogram(y, bins=bins)
+                # normalize the center of each bin instead of the boundaries, and move bins into the first dimension
+                x_hist = np.array([0.5*(x_hist[1][1:]+x_hist[1][:-1]), x_hist[0]]).T
+                y_hist = np.array([0.5*(y_hist[1][1:]+y_hist[1][:-1]), y_hist[0]]).T
+
+                return x_hist, y_hist
+
+
             for j in range(fp.num_channels):
                 print('saving channel', j+1)
                 print('calculating total flow statistics')
@@ -114,6 +135,10 @@ def main():
                 # save text and summary files
                 print('saving channel summary')
                 ch_summary.savefig(os.path.join(file_save_path, f'ch{j + 1}_summary.png'))
+
+                total_hist, masked_hist = histogram(total_flow, total_flow_masked)
+                np.savetxt(os.path.join(file_save_path, f'total_hist_ch{j + 1}.txt'), total_hist)
+                np.savetxt(os.path.join(file_save_path, f'masked_hist_ch{j + 1}.txt'), masked_hist)
 
                 # save summary stats for current channel
                 file_summary[f'Ch{j+1} mean total flow (px/frame)'] = total_mean_flow

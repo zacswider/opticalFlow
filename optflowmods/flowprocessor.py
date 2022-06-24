@@ -183,10 +183,17 @@ class FlowProcessor():
             Returns a dictionary with keys f'Ch{i + 1}' and plots as values.
             '''
             fig, ((ax1, ax2, ax3), (ax4, ax5, ax6)) = plt.subplots(nrows=2, ncols=3, figsize=(12,8))
-
+            
             all_masked_mags = np.concatenate(self.masked_mags_array[f'Ch{channel_num + 1}'])
-            ax1.hist(self.mags_array[:,channel_num,:,:].ravel(), bins = 100, color = 'tab:blue', label = 'total')
-            ax1.hist(all_masked_mags, bins = 100, color = 'tab:orange', label = 'masked')
+            all_mags = self.mags_array[:,channel_num,:,:].ravel()
+
+            min_val = min(np.min(all_masked_mags), np.min(all_mags))
+            max_val = max(np.max(all_masked_mags), np.max(all_mags))
+            
+            use_bins = np.linspace(min_val, max_val, 100)\
+
+            ax1.hist(all_mags, bins = use_bins, color = 'tab:blue', label = 'total')
+            ax1.hist(all_masked_mags, bins = use_bins, color = 'tab:orange', label = 'masked')
             ax1.set_title('Histogram of magnitudes')
             ax1.set_xlabel('Magnitude')
             ax1.set_ylabel('Count')
